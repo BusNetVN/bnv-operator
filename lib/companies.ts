@@ -1,0 +1,21 @@
+export type Company = {
+  id: string;
+  name: string;
+  short_name: string;
+  company_code: string;
+  slug: string;
+  logo_url: string;
+  cover_image_url: string;
+  description: string;
+  business_type: string;
+  tax_code: string;
+  business_license_no: string;
+  legal_representative: string;
+  representative_phone: string;
+  email: string;
+  phone: string;
+  website: string;
+  status: boolean;
+  created_at: string;
+  updated_at: string;
+};
