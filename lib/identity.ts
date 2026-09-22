@@ -31,7 +31,7 @@ export type LoginResponse = {
 };
 
 const IDENTITY_API_URL =
-  process.env.NEXT_PUBLIC_IDENTITY_API_URL ?? "http://localhost:8002/api";
+  process.env.NEXT_PUBLIC_IDENTITY_API_URL ?? "http://localhost:8080/identity/api";
 
 export class IdentityApiError extends Error {
   constructor(

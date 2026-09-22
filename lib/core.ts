@@ -1,7 +1,7 @@
 import { getAccessToken } from "@/lib/auth-session";
 
 const CORE_API_URL =
-  process.env.NEXT_PUBLIC_CORE_API_URL ?? "http://localhost:8001/api";
+  process.env.NEXT_PUBLIC_CORE_API_URL ?? "http://localhost:8080/core/api";
 
 export class CoreApiError extends Error {
   constructor(
