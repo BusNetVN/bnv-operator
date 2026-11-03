@@ -1,44 +1,4 @@
-import type { Company } from "@/lib/companies";
-import { coreRequest } from "@/lib/core";
-
-export type Route = {
-  id: string;
-  company_uuid: string;
-  company: Company;
-  route_code: string;
-  name: string;
-  origin: string;
-  destination: string;
-  distance_km: number | null;
-  duration_minutes: number | null;
-  note: string;
-  status: boolean;
-  sort_order: number;
-  created_at: string;
-  updated_at: string;
-};
-
-export type RouteInput = {
-  route_code: string;
-  name: string;
-  origin: string;
-  destination: string;
-  distance_km: string;
-  duration_minutes: string;
-  note: string;
-  status: boolean;
-};
-
-export type RoutePayload = {
-  route_code: string;
-  name: string;
-  origin: string;
-  destination: string;
-  distance_km: number | null;
-  duration_minutes: number | null;
-  note: string;
-  status: boolean;
-};
+import type { Route, RouteInput, RoutePayload } from "@/types/routes";
 
 export function statusLabel(status: boolean) {
   return status ? "Đang hoạt động" : "Ngưng hoạt động";
@@ -116,49 +76,6 @@ export function itineraryLabel(route: Pick<Route, "origin" | "destination">) {
     .map((item) => item.trim())
     .filter(Boolean)
     .join(" → ");
-}
-
-export function listRoutes(companyUuid: string, query?: string) {
-  const params = new URLSearchParams({ company_uuid: companyUuid });
-  const keyword = query?.trim();
-  if (keyword) {
-    params.set("q", keyword);
-  }
-
-  return coreRequest<Route[]>(`/routes?${params.toString()}`);
-}
-
-export function createRoute(companyUuid: string, input: RoutePayload) {
-  return coreRequest<Route>("/routes", {
-    method: "POST",
-    body: JSON.stringify({
-      ...input,
-      company_uuid: companyUuid,
-    }),
-  });
-}
-
-export function updateRoute(id: string, input: RoutePayload) {
-  return coreRequest<Route>(`/routes/${id}`, {
-    method: "PATCH",
-    body: JSON.stringify(input),
-  });
-}
-
-export function deleteRoute(id: string) {
-  return coreRequest<{ id: string; route_code: string }>(`/routes/${id}`, {
-    method: "DELETE",
-  });
-}
-
-export function reorderRoutes(companyUuid: string, ids: string[]) {
-  return coreRequest<Route[]>("/routes/reorder", {
-    method: "PATCH",
-    body: JSON.stringify({
-      company_uuid: companyUuid,
-      ids,
-    }),
-  });
 }
 
 function parseOptionalInt(value: string) {

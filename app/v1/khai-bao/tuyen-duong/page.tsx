@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { RoutesPage } from "@/components/routes-page";
+import { RoutesPage } from "@/components/declare/routes-page";
 
 export const metadata: Metadata = {
   title: "Tuyến đường",

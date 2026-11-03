@@ -1,40 +1,10 @@
-import type { Company } from "@/lib/companies";
-import { coreRequest } from "@/lib/core";
-
-export type SeatMapCellType = "seat" | "empty";
-
-export type SeatMapCell = {
-  floor: number;
-  row: number;
-  col: number;
-  code: string;
-  type: SeatMapCellType;
-};
-
-export type SeatMap = {
-  id: string;
-  company_uuid: string;
-  company: Company;
-  seat_map_code: string;
-  name: string;
-  layout_type: SeatMapType;
-  floors: number;
-  rows: number;
-  columns: number;
-  seats: SeatMapCell[];
-  seat_count: number;
-  note: string;
-  status: boolean;
-  created_at: string;
-  updated_at: string;
-};
-
-export type SeatMapType =
-  | "seat"
-  | "seat_limousine"
-  | "sleeper"
-  | "sleeper_limousine"
-  | "vip_cabin";
+import type {
+  SeatMap,
+  SeatMapCell,
+  SeatMapInput,
+  SeatMapPayload,
+  SeatMapType,
+} from "@/types/seat-maps";
 
 export const SEAT_MAP_TYPES: { value: SeatMapType; label: string }[] = [
   { value: "seat", label: "Ghế ngồi" },
@@ -43,30 +13,6 @@ export const SEAT_MAP_TYPES: { value: SeatMapType; label: string }[] = [
   { value: "sleeper_limousine", label: "Giường nằm limousine" },
   { value: "vip_cabin", label: "Phòng VIP (Cabin)" },
 ];
-
-export type SeatMapInput = {
-  seat_map_code: string;
-  name: string;
-  layout_type: SeatMapType;
-  floors: string;
-  rows: string;
-  columns: string;
-  seats: SeatMapCell[];
-  note: string;
-  status: boolean;
-};
-
-export type SeatMapPayload = {
-  seat_map_code: string;
-  name: string;
-  layout_type: SeatMapType;
-  floors: number;
-  rows: number;
-  columns: number;
-  seats: SeatMapCell[];
-  note: string;
-  status: boolean;
-};
 
 export function layoutTypeLabel(value: string) {
   return SEAT_MAP_TYPES.find((item) => item.value === value)?.label ?? value;
@@ -176,40 +122,4 @@ export function toSeatMapPayload(values: SeatMapInput): SeatMapPayload {
     note: values.note.trim(),
     status: values.status,
   };
-}
-
-export function listSeatMaps(companyUuid: string, query?: string) {
-  const params = new URLSearchParams({ company_uuid: companyUuid });
-  const keyword = query?.trim();
-  if (keyword) {
-    params.set("q", keyword);
-  }
-
-  return coreRequest<SeatMap[]>(`/seat-maps?${params.toString()}`);
-}
-
-export function createSeatMap(companyUuid: string, input: SeatMapPayload) {
-  return coreRequest<SeatMap>("/seat-maps", {
-    method: "POST",
-    body: JSON.stringify({
-      ...input,
-      company_uuid: companyUuid,
-    }),
-  });
-}
-
-export function updateSeatMap(id: string, input: SeatMapPayload) {
-  return coreRequest<SeatMap>(`/seat-maps/${id}`, {
-    method: "PATCH",
-    body: JSON.stringify(input),
-  });
-}
-
-export function deleteSeatMap(id: string) {
-  return coreRequest<{ id: string; seat_map_code: string }>(
-    `/seat-maps/${id}`,
-    {
-      method: "DELETE",
-    },
-  );
 }

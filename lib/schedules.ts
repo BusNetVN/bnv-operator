@@ -1,53 +1,9 @@
-import type { Company } from "@/lib/companies";
-import { coreRequest } from "@/lib/core";
-
-export type WeekdayMode = "all" | "custom";
-
-export type ScheduleRoute = {
-  id: string;
-  route_code: string;
-  name: string;
-  origin: string;
-  destination: string;
-};
-
-export type ScheduleSeatMap = {
-  id: string;
-  seat_map_code: string;
-  name: string;
-  layout_type: string;
-};
-
-export type Schedule = {
-  id: string;
-  company_uuid: string;
-  company: Company;
-  route_uuid: string;
-  route: ScheduleRoute;
-  seat_map_uuid: string;
-  seat_map: ScheduleSeatMap;
-  start_date: string;
-  end_date: string;
-  weekday_mode: WeekdayMode;
-  weekdays: number[];
-  note: string;
-  status: boolean;
-  created_at: string;
-  updated_at: string;
-};
-
-export type ScheduleInput = {
-  route_uuid: string;
-  seat_map_uuid: string;
-  start_date: string;
-  end_date: string;
-  weekday_mode: WeekdayMode;
-  weekdays: number[];
-  note: string;
-  status: boolean;
-};
-
-export type SchedulePayload = ScheduleInput;
+import type {
+  Schedule,
+  ScheduleInput,
+  SchedulePayload,
+  WeekdayMode,
+} from "@/types/schedules";
 
 export const WEEKDAYS = [
   { value: 1, label: "Thứ 2" },
@@ -61,6 +17,14 @@ export const WEEKDAYS = [
 
 const ALL_WEEKDAYS = WEEKDAYS.map((item) => item.value);
 
+export const HOURS_24 = Array.from({ length: 24 }, (_, hour) =>
+  String(hour).padStart(2, "0"),
+);
+
+export const MINUTES_60 = Array.from({ length: 60 }, (_, minute) =>
+  String(minute).padStart(2, "0"),
+);
+
 export function statusLabel(status: boolean) {
   return status ? "Đang hoạt động" : "Ngưng hoạt động";
 }
@@ -71,6 +35,7 @@ export function emptyScheduleInput(): ScheduleInput {
     seat_map_uuid: "",
     start_date: "",
     end_date: "",
+    departure_time: "",
     weekday_mode: "all",
     weekdays: [...ALL_WEEKDAYS],
     note: "",
@@ -84,6 +49,7 @@ export function toScheduleInput(schedule: Schedule): ScheduleInput {
     seat_map_uuid: schedule.seat_map_uuid,
     start_date: schedule.start_date.slice(0, 10),
     end_date: schedule.end_date.slice(0, 10),
+    departure_time: formatTimeInput(schedule.departure_time),
     weekday_mode: schedule.weekday_mode === "custom" ? "custom" : "all",
     weekdays:
       schedule.weekday_mode === "custom" && schedule.weekdays.length
@@ -101,6 +67,7 @@ export function toSchedulePayload(values: ScheduleInput): SchedulePayload {
     seat_map_uuid: values.seat_map_uuid,
     start_date: values.start_date,
     end_date: values.end_date,
+    departure_time: formatTimeInput(values.departure_time),
     weekday_mode: weekdayMode,
     weekdays:
       weekdayMode === "all"
@@ -118,6 +85,40 @@ export function formatDateRange(start: string, end: string) {
     return from;
   }
   return `${from} → ${to}`;
+}
+
+export function formatTimeInput(value?: string) {
+  const match = value?.trim().match(/^(\d{1,2}):(\d{2})/);
+  if (!match) {
+    return "";
+  }
+
+  const hour = Number(match[1]);
+  const minute = Number(match[2]);
+  if (
+    !Number.isInteger(hour) ||
+    !Number.isInteger(minute) ||
+    hour < 0 ||
+    hour > 23 ||
+    minute < 0 ||
+    minute > 59
+  ) {
+    return "";
+  }
+
+  return `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
+}
+
+export function splitDepartureTime(value?: string) {
+  const formatted = formatTimeInput(value);
+  return {
+    hour: formatted.slice(0, 2),
+    minute: formatted.slice(3, 5),
+  };
+}
+
+export function formatDepartureTime(value: string) {
+  return formatTimeInput(value) || "—";
 }
 
 export function formatDate(value: string) {
@@ -138,37 +139,4 @@ export function weekdaysLabel(mode: WeekdayMode, days: number[]) {
     (item) => item.label,
   );
   return labels.length ? labels.join(", ") : "Cả tuần";
-}
-
-export function listSchedules(companyUuid: string, query?: string) {
-  const params = new URLSearchParams({ company_uuid: companyUuid });
-  const keyword = query?.trim();
-  if (keyword) {
-    params.set("q", keyword);
-  }
-
-  return coreRequest<Schedule[]>(`/schedules?${params.toString()}`);
-}
-
-export function createSchedule(companyUuid: string, input: SchedulePayload) {
-  return coreRequest<Schedule>("/schedules", {
-    method: "POST",
-    body: JSON.stringify({
-      ...input,
-      company_uuid: companyUuid,
-    }),
-  });
-}
-
-export function updateSchedule(id: string, input: SchedulePayload) {
-  return coreRequest<Schedule>(`/schedules/${id}`, {
-    method: "PATCH",
-    body: JSON.stringify(input),
-  });
-}
-
-export function deleteSchedule(id: string) {
-  return coreRequest<{ id: string }>(`/schedules/${id}`, {
-    method: "DELETE",
-  });
 }

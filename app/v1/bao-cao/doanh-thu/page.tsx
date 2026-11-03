@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { WorkspacePlaceholder } from "@/components/workspace-placeholder";
+import { WorkspacePlaceholder } from "@/components/shared/workspace-placeholder";
 
 export const metadata: Metadata = {
   title: "Doanh thu",

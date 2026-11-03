@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { Globe, Package, Ticket, Wallet } from "lucide-react";
-import { getAccount, getWorkspace } from "@/lib/auth-session";
-import type { PublicAccount } from "@/lib/identity";
-import type { Office } from "@/lib/offices";
+import { useAuthStore } from "@/features/auth/stores/auth.store";
+import type { PublicAccount } from "@/features/auth/types/auth.types";
+import type { Office } from "@/features/office/types/office.types";
 
 const cards = [
   {
@@ -38,8 +38,8 @@ export default function DashboardPage() {
   const [workspace, setWorkspace] = useState<Office | null>(null);
 
   useEffect(() => {
-    setAccount(getAccount());
-    setWorkspace(getWorkspace());
+    setAccount(useAuthStore.getState().account);
+    setWorkspace(useAuthStore.getState().workspace);
   }, []);
 
   const companyName =

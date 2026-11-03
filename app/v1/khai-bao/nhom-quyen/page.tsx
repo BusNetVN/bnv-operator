@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-import { RoleGroupsPage } from "@/components/roles-page";
+import { RoleGroupsPage } from "@/components/declare/roles-page";
 
 export const metadata: Metadata = {
   title: "Nhóm quyền",

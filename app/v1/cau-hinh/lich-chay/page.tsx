@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { SchedulesPage } from "@/components/schedules-page";
+import { SchedulesPage } from "@/components/config/schedules/schedules-page";
 
 export const metadata: Metadata = {
   title: "Lịch chạy",

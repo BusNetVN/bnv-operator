@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { OfficesPage } from "@/components/offices-page";
+import { OfficesPage } from "@/features/office/components/offices-page";
 
 export const metadata: Metadata = {
   title: "Văn phòng",

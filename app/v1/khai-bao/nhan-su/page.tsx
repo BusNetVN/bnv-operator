@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { StaffPage } from "@/components/staff-page";
+import { StaffPage } from "@/components/declare/staff-page";
 
 export const metadata: Metadata = {
   title: "Nhân sự",

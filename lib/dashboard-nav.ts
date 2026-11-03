@@ -6,20 +6,9 @@ import {
   Package,
   Ticket,
   Settings,
-  type LucideIcon,
 } from "lucide-react";
 
-export type NavLeaf = {
-  title: string;
-  href: string;
-};
-
-export type NavItem = {
-  title: string;
-  icon: LucideIcon;
-  href?: string;
-  items?: NavLeaf[];
-};
+import type { NavItem } from "@/types/navigation";
 
 export const dashboardNav: NavItem[] = [
   {
@@ -58,10 +47,11 @@ export const dashboardNav: NavItem[] = [
     items: [
       { title: "Tuyến đường", href: "/v1/khai-bao/tuyen-duong" },
       { title: "Sơ đồ ghế", href: "/v1/khai-bao/so-do-ghe" },
+      { title: "Phương tiện", href: "/v1/khai-bao/phuong-tien" },
       { title: "Nhân sự", href: "/v1/khai-bao/nhan-su" },
       { title: "Nhóm quyền", href: "/v1/khai-bao/nhom-quyen" },
-      { title: "Giá vé", href: "/v1/khai-bao/gia-ve" },
       { title: "Văn phòng", href: "/v1/khai-bao/van-phong" },
+      { title: "Điểm dừng", href: "/v1/khai-bao/diem-dung" },
     ],
   },
   {
