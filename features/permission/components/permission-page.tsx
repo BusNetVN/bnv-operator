@@ -17,6 +17,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { AuditInfo } from "@/components/shared/audit-info";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -44,9 +46,8 @@ import {
 } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuthStore } from "@/features/auth/stores/auth.store";
-import type { PermissionGroup } from "@/types/permissions";
-import { activePermissionCatalog } from "@/lib/permissions";
-import { listPermissionCatalog } from "@/service/permissions";
+import { PermissionChecklist } from "@/features/permission/components/permission-checklist";
+import { usePermissionCatalog } from "@/features/permission/hooks/use-permission-catalog";
 import type { Role, RoleInput } from "@/types/roles";
 import {
   emptyRoleInput,
@@ -60,9 +61,9 @@ import { toast } from "@/lib/toast";
 
 type FormErrors = Partial<Record<keyof RoleInput, string>>;
 
-export function RoleGroupsPage() {
+export function PermissionPage() {
   const [companyUuid, setCompanyUuid] = useState<string | null>(null);
-  const [catalog, setCatalog] = useState<PermissionGroup[]>([]);
+  const { catalog: availableCatalog, error: catalogError } = usePermissionCatalog();
   const [roles, setRoles] = useState<Role[]>([]);
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(true);
@@ -73,19 +74,15 @@ export function RoleGroupsPage() {
   const [deleting, setDeleting] = useState<Role | null>(null);
   const [pending, setPending] = useState(false);
 
-  const availableCatalog = useMemo(
-    () => activePermissionCatalog(catalog),
-    [catalog],
-  );
-
   async function refresh() {
-    const [nextRoles, nextCatalog] = await Promise.all([
-      listRoles(),
-      listPermissionCatalog(),
-    ]);
-    setRoles(nextRoles);
-    setCatalog(nextCatalog);
+    setRoles(await listRoles());
   }
+
+  useEffect(() => {
+    if (catalogError) {
+      toast.fromError(catalogError, "Không tải được danh mục chức năng.");
+    }
+  }, [catalogError]);
 
   useEffect(() => {
     const account = useAuthStore.getState().account;
@@ -149,30 +146,6 @@ export function RoleGroupsPage() {
     setForm(toRoleInput(role));
     setErrors({});
     setFormOpen(true);
-  }
-
-  function togglePermission(id: string) {
-    const selected = new Set(form.permission_ids);
-    if (selected.has(id)) {
-      selected.delete(id);
-    } else {
-      selected.add(id);
-    }
-    updateField("permission_ids", [...selected]);
-  }
-
-  function toggleGroup(group: PermissionGroup) {
-    const ids = group.permissions.map((item) => item.id);
-    const selected = new Set(form.permission_ids);
-    const allSelected = ids.every((id) => selected.has(id));
-
-    if (allSelected) {
-      ids.forEach((id) => selected.delete(id));
-    } else {
-      ids.forEach((id) => selected.add(id));
-    }
-
-    updateField("permission_ids", [...selected]);
   }
 
   function validate(values: RoleInput): FormErrors {
@@ -288,8 +261,11 @@ export function RoleGroupsPage() {
           <TableHeader>
             <TableRow>
               <TableHead>Tên nhóm quyền</TableHead>
+              <TableHead>Mô tả</TableHead>
               <TableHead>Chức năng</TableHead>
               <TableHead>Trạng thái</TableHead>
+              <TableHead className="hidden lg:table-cell">Tạo</TableHead>
+              <TableHead className="hidden lg:table-cell">Cập nhật</TableHead>
               <TableHead className="w-24 text-right">Thao tác</TableHead>
             </TableRow>
           </TableHeader>
@@ -297,7 +273,7 @@ export function RoleGroupsPage() {
             {loading ? (
               <TableRow>
                 <TableCell
-                  colSpan={4}
+                  colSpan={7}
                   className="h-24 text-center text-muted-foreground"
                 >
                   Đang tải danh sách nhóm quyền...
@@ -306,7 +282,7 @@ export function RoleGroupsPage() {
             ) : filteredRoles.length === 0 ? (
               <TableRow>
                 <TableCell
-                  colSpan={4}
+                  colSpan={7}
                   className="h-24 text-center text-muted-foreground"
                 >
                   {roles.length === 0
@@ -319,13 +295,12 @@ export function RoleGroupsPage() {
             ) : (
               filteredRoles.map((role) => (
                 <TableRow key={role.id}>
-                  <TableCell>
-                    <p className="font-medium">{role.name}</p>
-                    {role.description ? (
-                      <p className="max-w-72 truncate text-sm text-muted-foreground">
-                        {role.description}
-                      </p>
-                    ) : null}
+                  <TableCell className="font-medium">{role.name}</TableCell>
+                  <TableCell
+                    className="max-w-56 truncate text-muted-foreground"
+                    title={role.description}
+                  >
+                    {role.description || "—"}
                   </TableCell>
                   <TableCell className="max-w-xl">
                     <div className="flex flex-col gap-1">
@@ -339,12 +314,22 @@ export function RoleGroupsPage() {
                       ))}
                     </div>
                   </TableCell>
-                  <TableCell
-                    className={
-                      role.is_active ? "text-emerald-700" : "text-muted-foreground"
-                    }
-                  >
-                    {statusLabel(role.is_active)}
+                  <TableCell>
+                    <Badge variant={role.is_active ? "default" : "outline"}>
+                      {statusLabel(role.is_active)}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="hidden lg:table-cell">
+                    <AuditInfo
+                      username={role.created_by}
+                      timestamp={role.created_at}
+                    />
+                  </TableCell>
+                  <TableCell className="hidden lg:table-cell">
+                    <AuditInfo
+                      username={role.updated_by}
+                      timestamp={role.updated_at}
+                    />
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-1">
@@ -425,55 +410,11 @@ export function RoleGroupsPage() {
 
               <Field>
                 <FieldLabel>Chức năng</FieldLabel>
-                {availableCatalog.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">
-                    Chưa có chức năng do hệ thống cung cấp.
-                  </p>
-                ) : (
-                  <div className="grid gap-3 rounded-lg border p-3">
-                    {availableCatalog.map((group) => {
-                      const ids = group.permissions.map((item) => item.id);
-                      const selectedCount = ids.filter((id) =>
-                        form.permission_ids.includes(id),
-                      ).length;
-                      const allSelected =
-                        ids.length > 0 && selectedCount === ids.length;
-
-                      return (
-                        <div key={group.id} className="grid gap-2">
-                          <label className="flex items-center gap-2 text-sm font-medium">
-                            <Checkbox
-                              checked={allSelected}
-                              onCheckedChange={() => toggleGroup(group)}
-                              aria-label={`Chọn tất cả chức năng ${group.name}`}
-                            />
-                            <span>{group.name}</span>
-                            <span className="font-mono text-xs font-normal uppercase text-muted-foreground">
-                              {group.code}
-                            </span>
-                          </label>
-                          <div className="grid gap-2 border-l pl-5">
-                            {group.permissions.map((item) => (
-                              <label
-                                key={item.id}
-                                className="flex items-center gap-2 text-sm"
-                              >
-                                <Checkbox
-                                  checked={form.permission_ids.includes(item.id)}
-                                  onCheckedChange={() => togglePermission(item.id)}
-                                />
-                                <span>{item.name}</span>
-                                <span className="font-mono text-xs text-muted-foreground">
-                                  {item.code}
-                                </span>
-                              </label>
-                            ))}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
+                <PermissionChecklist
+                  groups={availableCatalog}
+                  value={form.permission_ids}
+                  onChange={(ids) => updateField("permission_ids", ids)}
+                />
                 {errors.permission_ids ? (
                   <FieldError>{errors.permission_ids}</FieldError>
                 ) : null}

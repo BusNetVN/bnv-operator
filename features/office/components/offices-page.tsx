@@ -42,6 +42,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { AuditInfo } from "@/components/shared/audit-info";
+import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuthStore } from "@/features/auth/stores/auth.store";
 import { useOffices } from "@/features/office/hooks/use-offices";
@@ -52,7 +55,11 @@ import {
   updateOffice,
 } from "@/features/office/services/office.service";
 import type { Office, OfficeInput } from "@/features/office/types/office.types";
-import { emptyOfficeInput, toOfficeInput } from "@/features/office/utils/office-input";
+import {
+  emptyOfficeInput,
+  statusLabel,
+  toOfficeInput,
+} from "@/features/office/utils/office-input";
 import { toast } from "@/lib/toast";
 import { firstFieldErrors } from "@/lib/validation";
 
@@ -210,19 +217,22 @@ export function OfficesPage() {
               <TableHead>Địa chỉ</TableHead>
               <TableHead>Số điện thoại</TableHead>
               <TableHead>Ghi chú</TableHead>
+              <TableHead>Trạng thái</TableHead>
+              <TableHead className="hidden lg:table-cell">Tạo</TableHead>
+              <TableHead className="hidden lg:table-cell">Cập nhật</TableHead>
               <TableHead className="w-24 text-right">Thao tác</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">
+                <TableCell colSpan={9} className="h-24 text-center text-muted-foreground">
                   Đang tải danh sách văn phòng...
                 </TableCell>
               </TableRow>
             ) : filteredOffices.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">
+                <TableCell colSpan={9} className="h-24 text-center text-muted-foreground">
                   {offices.length === 0
                     ? "Chưa có văn phòng nào. Bấm Thêm văn phòng để khai báo."
                     : "Không tìm thấy văn phòng phù hợp."}
@@ -243,6 +253,23 @@ export function OfficesPage() {
                   </TableCell>
                   <TableCell className="max-w-56 truncate text-muted-foreground">
                     {office.note || "—"}
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant={office.is_active ? "default" : "outline"}>
+                      {statusLabel(office.is_active)}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="hidden lg:table-cell">
+                    <AuditInfo
+                      username={office.created_by}
+                      timestamp={office.created_at}
+                    />
+                  </TableCell>
+                  <TableCell className="hidden lg:table-cell">
+                    <AuditInfo
+                      username={office.updated_by}
+                      timestamp={office.updated_at}
+                    />
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-1">
@@ -380,6 +407,19 @@ export function OfficesPage() {
                   onChange={(event) => updateField("note", event.target.value)}
                   placeholder="Giờ làm việc, ghi chú nội bộ..."
                 />
+              </Field>
+
+              <Field orientation="horizontal" className="items-center gap-2">
+                <Checkbox
+                  id="office-status"
+                  checked={form.is_active}
+                  onCheckedChange={(checked) =>
+                    updateField("is_active", checked === true)
+                  }
+                />
+                <FieldLabel htmlFor="office-status" className="font-normal">
+                  Đang hoạt động
+                </FieldLabel>
               </Field>
             </FieldGroup>
 

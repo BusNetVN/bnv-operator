@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Building2, MapPin, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -22,7 +22,12 @@ export function OfficeSelectForm({ onSwitchAccount }: OfficeSelectFormProps) {
   const [companyUuid] = useState(
     () => useAuthStore.getState().account?.company_uuid ?? null,
   );
-  const { offices, loading, error: loadError } = useOffices(companyUuid);
+  const { offices: allOffices, loading, error: loadError } = useOffices(companyUuid);
+  // Offices that stopped working cannot be chosen as the working office.
+  const offices = useMemo(
+    () => allOffices.filter((office) => office.is_active),
+    [allOffices],
+  );
   const [chosenId, setChosenId] = useState("");
   const [pending, setPending] = useState(false);
   const [submitError, setSubmitError] = useState("");
@@ -55,7 +60,7 @@ export function OfficeSelectForm({ onSwitchAccount }: OfficeSelectFormProps) {
   useEffect(() => {
     if (noOffices) {
       toast.info(
-        "Nhà xe chưa có văn phòng.",
+        "Nhà xe chưa có văn phòng đang hoạt động.",
         "Liên hệ điều hành để khai báo trước khi làm việc.",
       );
     }
@@ -161,8 +166,8 @@ export function OfficeSelectForm({ onSwitchAccount }: OfficeSelectFormProps) {
         </fieldset>
       ) : (
         <p className="text-sm text-slate-500">
-          Nhà xe chưa có văn phòng. Liên hệ điều hành để khai báo trước khi làm
-          việc.
+          Nhà xe chưa có văn phòng đang hoạt động. Liên hệ điều hành để khai báo
+          trước khi làm việc.
         </p>
       )}
 

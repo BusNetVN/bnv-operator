@@ -46,6 +46,7 @@ export const officeSchema = z.object({
         .min(1, "Vui lòng nhập ít nhất một số điện thoại."),
     ),
   note: z.string().trim().max(1000, "Ghi chú tối đa 1000 ký tự."),
+  is_active: z.boolean(),
 });
 
 export type OfficeFormValues = z.input<typeof officeSchema>;

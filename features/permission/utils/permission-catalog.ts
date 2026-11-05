@@ -1,4 +1,4 @@
-import type { PermissionGroup } from "@/types/permissions";
+import type { PermissionGroup } from "@/features/permission/types/permission.types";
 
 export function activePermissionCatalog(groups: PermissionGroup[]) {
   return groups

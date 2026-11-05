@@ -38,7 +38,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { hasPermission } from "@/features/auth/utils/permissions";
+import { useHasPermission } from "@/features/permission/hooks/use-has-permission";
 import { useAuthStore } from "@/features/auth/stores/auth.store";
 import type { Fare, FareInput } from "@/types/fares";
 import {
@@ -73,7 +73,7 @@ type FormErrors = Partial<
 
 export function FaresPage() {
   const [companyUuid, setCompanyUuid] = useState<string | null>(null);
-  const [canManage, setCanManage] = useState(false);
+  const canManage = useHasPermission("FARE_CREATE", "FARE_UPDATE");
   const [routes, setRoutes] = useState<Route[]>([]);
   const [fares, setFares] = useState<Fare[]>([]);
   const [schedules, setSchedules] = useState<Schedule[]>([]);
@@ -106,12 +106,6 @@ export function FaresPage() {
     const account = useAuthStore.getState().account;
     const companyId = account?.company_uuid ?? null;
     setCompanyUuid(companyId);
-    setCanManage(
-      account?.account_type === "SYSTEM_ADMIN" ||
-        account?.staff_role === "ADMIN" ||
-        hasPermission(account, "FARE_CREATE") ||
-        hasPermission(account, "FARE_UPDATE"),
-    );
 
     if (!companyId) {
       setLoading(false);

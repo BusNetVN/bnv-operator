@@ -24,7 +24,7 @@ import { cn } from "cn";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SearchableSelect } from "@/components/ui/searchable-select";
-import { hasPermission } from "@/features/auth/utils/permissions";
+import { useHasPermission } from "@/features/permission/hooks/use-has-permission";
 import { useAuthStore } from "@/features/auth/stores/auth.store";
 import { locationAddress } from "@/lib/locations";
 import type { Point } from "@/types/points";
@@ -58,7 +58,7 @@ function withDeparture(stops: RouteStopDraft[]) {
 
 export function RouteConfigPage() {
   const [companyUuid, setCompanyUuid] = useState<string | null>(null);
-  const [canUpdate, setCanUpdate] = useState(false);
+  const canUpdate = useHasPermission("ROUTE_UPDATE");
   const [routes, setRoutes] = useState<Route[]>([]);
   const [routeId, setRouteId] = useState("");
   const [points, setPoints] = useState<Point[]>([]);
@@ -81,11 +81,6 @@ export function RouteConfigPage() {
     const account = useAuthStore.getState().account;
     const companyId = account?.company_uuid ?? null;
     setCompanyUuid(companyId);
-    setCanUpdate(
-      account?.account_type === "SYSTEM_ADMIN" ||
-        account?.staff_role === "ADMIN" ||
-        hasPermission(account, "ROUTE_UPDATE"),
-    );
 
     if (!companyId) {
       setLoading(false);

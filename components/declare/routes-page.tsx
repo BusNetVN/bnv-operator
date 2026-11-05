@@ -62,7 +62,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
-import { hasPermission } from "@/features/auth/utils/permissions";
+import { useHasPermission } from "@/features/permission/hooks/use-has-permission";
 import { useAuthStore } from "@/features/auth/stores/auth.store";
 import type { Route, RouteInput } from "@/types/routes";
 import {
@@ -85,7 +85,7 @@ import { toast } from "@/lib/toast";
 
 export function RoutesPage() {
   const [companyUuid, setCompanyUuid] = useState<string | null>(null);
-  const [canUpdate, setCanUpdate] = useState(false);
+  const canUpdate = useHasPermission("ROUTE_UPDATE");
   const [routes, setRoutes] = useState<Route[]>([]);
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(true);
@@ -112,7 +112,6 @@ export function RoutesPage() {
     const account = useAuthStore.getState().account;
     const companyId = account?.company_uuid ?? null;
     setCompanyUuid(companyId);
-    setCanUpdate(hasPermission(account, "ROUTE_UPDATE"));
 
     if (!companyId) {
       setLoading(false);
