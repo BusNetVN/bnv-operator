@@ -19,11 +19,11 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import type { SeatMap } from "@/types/seat-maps";
 import { listSeatMaps } from "@/service/seat-maps";
-import type { Staff } from "@/types/staff";
-import { listStaff } from "@/service/staff";
+import type { User } from "@/features/user/types/user.types";
+import { listUsers } from "@/features/user/services/user.service";
 import { toast } from "@/lib/toast";
-import type { Vehicle } from "@/types/vehicles";
-import { listVehicles } from "@/service/vehicles";
+import type { Vehicle } from "@/features/vehicle/types/vehicle.types";
+import { listVehicles } from "@/features/vehicle/services/vehicle.service";
 import type { Trip, TripCrewMember, TripTicket } from "@/types/trips";
 import { formatTripTime } from "@/lib/trips";
 import {
@@ -54,8 +54,8 @@ function toForm(trip: Trip): Form {
 }
 
 function crewItems(
-  staff: Staff[],
-  role: Staff["staff_role"],
+  staff: User[],
+  role: User["staff_role"],
   current: TripCrewMember[],
 ) {
   const items: SearchableSelectItem[] = staff
@@ -84,8 +84,8 @@ function crewSelection(members: TripCrewMember[]) {
 
 function selectedCrew(
   selectedIds: string[],
-  staff: Staff[],
-  role: Staff["staff_role"],
+  staff: User[],
+  role: User["staff_role"],
   current: TripCrewMember[],
 ) {
   return selectedIds.flatMap((id) => {
@@ -183,7 +183,7 @@ export function EditTripDialog({
 }) {
   const [form, setForm] = useState<Form>(() => toForm(trip));
   const [seatMaps, setSeatMaps] = useState<SeatMap[]>([]);
-  const [staff, setStaff] = useState<Staff[]>([]);
+  const [staff, setStaff] = useState<User[]>([]);
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [pending, setPending] = useState(false);
 
@@ -196,8 +196,8 @@ export function EditTripDialog({
     let cancelled = false;
     Promise.all([
       listSeatMaps(trip.company_uuid),
-      listStaff(trip.company_uuid),
-      listVehicles(trip.company_uuid),
+      listUsers(),
+      listVehicles(),
     ])
       .then(([maps, accounts, fleet]) => {
         if (!cancelled) {

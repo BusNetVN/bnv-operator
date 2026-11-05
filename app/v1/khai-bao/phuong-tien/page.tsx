@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { VehiclesPage } from "@/components/declare/vehicles-page";
+import { VehiclesPage } from "@/features/vehicle/components/vehicles-page";
 
 export const metadata: Metadata = {
   title: "Phương tiện",

@@ -1,6 +1,7 @@
 export type VehicleCondition = "NEW" | "REFURBISHED";
 export type VehicleStatus = "IN_USE" | "MAINTENANCE" | "INACTIVE" | "SOLD";
 
+/** Vehicle of the company in the access token (GET /vehicles). */
 export type Vehicle = {
   id: string;
   company_uuid: string;
@@ -27,6 +28,7 @@ export type Vehicle = {
   updated_at: string;
 };
 
+/** Values of the vehicle form; numbers and dates are kept as the strings typed in. */
 export type VehicleInput = {
   license_plate: string;
   engine_number: string;
@@ -48,5 +50,24 @@ export type VehicleInput = {
   status: VehicleStatus;
 };
 
-/** Trimmed form values; empty strings are sent as-is so the backend clears nullable fields. */
-export type VehiclePayload = VehicleInput;
+/** Body of POST/PATCH /vehicles; null clears a nullable field. */
+export type VehiclePayload = {
+  license_plate: string;
+  engine_number: string;
+  chassis_number: string;
+  seat_count: number;
+  model_code: string;
+  vehicle_kind: string;
+  color: string;
+  payload: number;
+  initial_odometer: number;
+  brand: string;
+  manufacture_year: number | null;
+  manufacture_country: string;
+  service_life_year: number | null;
+  owner_name: string;
+  registration_date: string | null;
+  office_uuid: string | null;
+  condition: VehicleCondition;
+  status: VehicleStatus;
+};

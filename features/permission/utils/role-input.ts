@@ -1,9 +1,8 @@
 import type {
   Role,
   RoleInput,
-  RolePayload,
   RolePermission,
-} from "@/types/roles";
+} from "@/features/permission/types/role.types";
 
 export function statusLabel(status: boolean) {
   return status ? "Đang hoạt động" : "Ngưng hoạt động";
@@ -24,15 +23,6 @@ export function toRoleInput(role: Role): RoleInput {
     description: role.description,
     status: role.is_active,
     permission_ids: role.permissions.map((item) => item.id),
-  };
-}
-
-export function toRolePayload(values: RoleInput): RolePayload {
-  return {
-    name: values.name.trim(),
-    description: values.description.trim(),
-    is_active: values.status,
-    permission_ids: [...new Set(values.permission_ids)],
   };
 }
 

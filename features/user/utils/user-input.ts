@@ -1,4 +1,8 @@
-import type { Staff, StaffInput, StaffRole } from "@/types/staff";
+import type {
+  StaffRole,
+  User,
+  UserInput,
+} from "@/features/user/types/user.types";
 
 export const STAFF_ROLES: { value: StaffRole; label: string }[] = [
   { value: "ADMIN", label: "Quản trị viên" },
@@ -6,6 +10,9 @@ export const STAFF_ROLES: { value: StaffRole; label: string }[] = [
   { value: "DRIVER", label: "Tài xế" },
   { value: "ASSISTANT", label: "Phụ xe" },
 ];
+
+/** Same limit as the API, suffix included. */
+export const USERNAME_MAX_LENGTH = 64;
 
 export function staffRoleLabel(role: StaffRole | null) {
   if (!role) {
@@ -18,16 +25,14 @@ export function statusLabel(status: boolean) {
   return status ? "Đang hoạt động" : "Đã khóa";
 }
 
-export function staffRoleNames(staff: Staff) {
-  if (!staff.roles?.length) {
+export function userRoleNames(user: User) {
+  if (!user.roles?.length) {
     return "—";
   }
-
-  return staff.roles.map((role) => role.name).join(", ");
+  return user.roles.map((role) => role.name).join(", ");
 }
 
-export const USERNAME_MAX_LENGTH = 64;
-
+/** Usernames end with ".<company code>" so they stay unique across companies. */
 export function companyUsernameSuffix(companyCode: string) {
   const code = companyCode.trim().toLowerCase();
   return code ? `.${code}` : "";
@@ -44,14 +49,13 @@ export function usernameLocalPart(username: string, companyCode: string) {
 
 export function usernameWithCompany(username: string, companyCode: string) {
   const local = usernameLocalPart(username, companyCode);
-  const suffix = companyUsernameSuffix(companyCode);
   if (!local) {
     return "";
   }
-  return `${local}${suffix}`;
+  return `${local}${companyUsernameSuffix(companyCode)}`;
 }
 
-export function emptyStaffInput(): StaffInput {
+export function emptyUserInput(): UserInput {
   return {
     username: "",
     password: "",
@@ -65,16 +69,16 @@ export function emptyStaffInput(): StaffInput {
   };
 }
 
-export function toStaffInput(staff: Staff, companyCode = ""): StaffInput {
+export function toUserInput(user: User, companyCode = ""): UserInput {
   return {
-    username: usernameLocalPart(staff.username, companyCode),
+    username: usernameLocalPart(user.username, companyCode),
     password: "",
     confirm_password: "",
-    full_name: staff.full_name,
-    email: staff.email,
-    phone: staff.phone,
-    staff_role: staff.staff_role ?? "STAFF",
-    role_ids: (staff.roles ?? []).map((role) => role.id),
-    status: staff.status,
+    full_name: user.full_name,
+    email: user.email,
+    phone: user.phone,
+    staff_role: user.staff_role ?? "STAFF",
+    role_ids: (user.roles ?? []).map((role) => role.id),
+    status: user.status,
   };
 }

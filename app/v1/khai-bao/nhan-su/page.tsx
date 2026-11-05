@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
-import { StaffPage } from "@/components/declare/staff-page";
+import { UsersPage } from "@/features/user/components/users-page";
 
 export const metadata: Metadata = {
   title: "Nhân sự",
 };
 
 export default function Page() {
-  return <StaffPage />;
+  return <UsersPage />;
 }

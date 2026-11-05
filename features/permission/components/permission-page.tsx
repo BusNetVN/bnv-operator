@@ -48,35 +48,37 @@ import { Textarea } from "@/components/ui/textarea";
 import { useAuthStore } from "@/features/auth/stores/auth.store";
 import { PermissionChecklist } from "@/features/permission/components/permission-checklist";
 import { usePermissionCatalog } from "@/features/permission/hooks/use-permission-catalog";
-import type { Role, RoleInput } from "@/types/roles";
+import { useRoles } from "@/features/permission/hooks/use-roles";
+import { roleSchema } from "@/features/permission/schemas/role.schema";
+import {
+  createRole,
+  deleteRole,
+  updateRole,
+} from "@/features/permission/services/role.service";
+import type { Role, RoleInput } from "@/features/permission/types/role.types";
 import {
   emptyRoleInput,
   groupedRolePermissions,
   statusLabel,
   toRoleInput,
-  toRolePayload,
-} from "@/lib/roles";
-import { createRole, deleteRole, listRoles, updateRole } from "@/service/roles";
+} from "@/features/permission/utils/role-input";
 import { toast } from "@/lib/toast";
+import { firstFieldErrors } from "@/lib/validation";
 
 type FormErrors = Partial<Record<keyof RoleInput, string>>;
 
 export function PermissionPage() {
-  const [companyUuid, setCompanyUuid] = useState<string | null>(null);
+  // Rendered inside DashboardShell, which only shows pages once the session is loaded.
+  const companyUuid = useAuthStore((state) => state.account?.company_uuid ?? null);
   const { catalog: availableCatalog, error: catalogError } = usePermissionCatalog();
-  const [roles, setRoles] = useState<Role[]>([]);
+  const { roles, loading, error: loadError, reload } = useRoles(companyUuid);
   const [query, setQuery] = useState("");
-  const [loading, setLoading] = useState(true);
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Role | null>(null);
   const [form, setForm] = useState<RoleInput>(emptyRoleInput);
   const [errors, setErrors] = useState<FormErrors>({});
   const [deleting, setDeleting] = useState<Role | null>(null);
   const [pending, setPending] = useState(false);
-
-  async function refresh() {
-    setRoles(await listRoles());
-  }
 
   useEffect(() => {
     if (catalogError) {
@@ -85,25 +87,19 @@ export function PermissionPage() {
   }, [catalogError]);
 
   useEffect(() => {
-    const account = useAuthStore.getState().account;
-    const companyId = account?.company_uuid ?? null;
-    setCompanyUuid(companyId);
-
-    if (!companyId) {
-      setLoading(false);
+    if (!companyUuid) {
       toast.warning(
         "Tài khoản chưa gắn với nhà xe.",
         "Chưa khai báo được nhóm quyền.",
       );
-      return;
     }
+  }, [companyUuid]);
 
-    refresh()
-      .catch((error: unknown) => {
-        toast.fromError(error, "Không tải được danh sách nhóm quyền.");
-      })
-      .finally(() => setLoading(false));
-  }, []);
+  useEffect(() => {
+    if (loadError) {
+      toast.fromError(loadError, "Không tải được danh sách nhóm quyền.");
+    }
+  }, [loadError]);
 
   const filteredRoles = useMemo(() => {
     const keyword = query.trim().toLowerCase();
@@ -148,43 +144,28 @@ export function PermissionPage() {
     setFormOpen(true);
   }
 
-  function validate(values: RoleInput): FormErrors {
-    const nextErrors: FormErrors = {};
-    const name = values.name.trim();
-
-    if (!name) {
-      nextErrors.name = "Vui lòng nhập tên nhóm quyền.";
-    } else {
-      const duplicated = roles.some(
-        (role) =>
-          role.name.trim().toLowerCase() === name.toLowerCase() &&
-          role.id !== editing?.id,
-      );
-      if (duplicated) {
-        nextErrors.name = "Tên nhóm quyền đã tồn tại.";
-      }
-    }
-
-    if (values.permission_ids.length === 0) {
-      nextErrors.permission_ids = "Vui lòng chọn ít nhất một chức năng.";
-    }
-
-    return nextErrors;
-  }
-
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!companyUuid) {
       return;
     }
 
-    const nextErrors = validate(form);
-    if (Object.keys(nextErrors).length) {
-      setErrors(nextErrors);
+    const parsed = roleSchema.safeParse(form);
+    if (!parsed.success) {
+      setErrors(firstFieldErrors(parsed.error));
+      return;
+    }
+    const payload = parsed.data;
+    const duplicated = roles.some(
+      (role) =>
+        role.name.trim().toLowerCase() === payload.name.toLowerCase() &&
+        role.id !== editing?.id,
+    );
+    if (duplicated) {
+      setErrors({ name: "Tên nhóm quyền đã tồn tại." });
       return;
     }
 
-    const payload = toRolePayload(form);
     setPending(true);
     setErrors({});
 
@@ -196,7 +177,7 @@ export function PermissionPage() {
         await createRole(payload);
         toast.success("Đã thêm nhóm quyền.", payload.name);
       }
-      await refresh();
+      await reload();
       setFormOpen(false);
     } catch (error: unknown) {
       toast.fromError(error, "Không lưu được nhóm quyền. Vui lòng thử lại.");
@@ -213,7 +194,7 @@ export function PermissionPage() {
     setPending(true);
     try {
       await deleteRole(deleting.id);
-      await refresh();
+      await reload();
       toast.success("Đã xóa nhóm quyền.", deleting.name);
       setDeleting(null);
     } catch (error: unknown) {

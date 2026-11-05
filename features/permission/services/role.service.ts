@@ -1,4 +1,4 @@
-import type { Role, RolePayload } from "@/types/roles";
+import type { Role, RolePayload } from "@/features/permission/types/role.types";
 import { coreRequest } from "@/service/core-api";
 
 /** Roles of the company in the access token. */
